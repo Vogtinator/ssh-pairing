@@ -5,4 +5,5 @@ project('ssh-pairing', 'c',
 executable('ssh-pairing-server',
            'ssh-pairing-server.c',
            dependencies: dependency('libssh'),
-           install: true)
+           install: true,
+           install_dir: get_option('sbindir'))
