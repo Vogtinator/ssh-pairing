@@ -10,6 +10,8 @@
 #include <libssh/callbacks.h>
 #include <libssh/server.h>
 
+#define MAX_KEY_COUNT 10
+
 int main(int argc, char *argv[])
 {
 	ssh_bind bind = ssh_bind_new();
@@ -46,44 +48,51 @@ int main(int argc, char *argv[])
 	ssh_set_auth_methods(session, SSH_AUTH_METHOD_PUBLICKEY | SSH_AUTH_METHOD_INTERACTIVE);
 
 	// TODO: Ask user for key name?
-	// TODO: Key list in interactive prompt is truncated
 	// TODO: Ask user which key to import?
 
 	char *authorized_keys = strdup("");
+	int keycount = 0;
 
 	ssh_message message;
 	while((message = ssh_message_get(session))) {
 		int msg_type = ssh_message_type(message),
 		    msg_subtype = ssh_message_subtype(message);
 
-		if(msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_PUBLICKEY) {
+		if(msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_PUBLICKEY && keycount < MAX_KEY_COUNT) {
 			ssh_key pubkey = ssh_message_auth_pubkey(message);
-			char *key_fp;
+			char *key_fp = NULL;
 			if(ssh_pki_export_pubkey_base64(pubkey, &key_fp) == 0) {
 				const char *key_type = ssh_key_type_to_char(ssh_key_type(pubkey));
 				char *new_authorized_keys;
 				if(asprintf(&new_authorized_keys, "%s%s %s %s@pairing\n", authorized_keys, key_type, key_fp, ssh_message_auth_user(message)) > 0) {
 					free(authorized_keys);
 					authorized_keys = new_authorized_keys;
+					keycount += 1;
 				}
 				free(key_fp);
 			}
 		} else if(msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_INTERACTIVE) {
-			ssh_message_auth_interactive_request(message, "Received public keys:",
-									authorized_keys, 0, NULL, 0);
+			char *msg = NULL;
+			if(asprintf(&msg, "Received %d public keys", keycount) > 0) {
+				ssh_message_auth_interactive_request(message, msg, "", 0, NULL, 0);
+				free(msg);
+			}
 			ssh_message_free(message);
 			break;
 		}
 
-		ssh_message_auth_set_methods(message, SSH_AUTH_METHOD_PUBLICKEY | SSH_AUTH_METHOD_INTERACTIVE);
-		ssh_message_reply_default(message);
+		if (keycount < MAX_KEY_COUNT)
+			ssh_message_auth_set_methods(message, SSH_AUTH_METHOD_PUBLICKEY | SSH_AUTH_METHOD_INTERACTIVE);
+		else
+			ssh_message_auth_set_methods(message, SSH_AUTH_METHOD_INTERACTIVE);
 
+		ssh_message_reply_default(message);
         ssh_message_free(message);
     }
 
 	printf("%s", authorized_keys);
 
 	ssh_disconnect(session);
-    ssh_bind_free(bind);
-    ssh_finalize();
+	ssh_bind_free(bind);
+	ssh_finalize();
 }
