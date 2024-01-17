@@ -2,11 +2,12 @@
 
 #define _GNU_SOURCE
 
-#include <libssh/libssh.h>
+#include <netdb.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <libssh/libssh.h>
 #include <libssh/callbacks.h>
 #include <libssh/server.h>
 
@@ -106,6 +107,7 @@ int main(int argc, char *argv[])
 	authorized_keys = NULL;
 
 	ssh_disconnect(session);
+	ssh_free(session);
 	ssh_bind_free(bind);
 	ssh_finalize();
 }
