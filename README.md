@@ -22,6 +22,8 @@ SHA256:Q4DyBOwcoyYXWccVsVNXKusPE2Rk3SKDC4w3z7z4PXI (DSA)
 SHA256:L1fVseOYAAAyufsAskcWeKDgAlE4KJ9uCIIly0RXk3I (ECDSA)
 SHA256:68fgeoCzfSPPTLbSW272DnLYER2Z9S3w8h2GDEcjg7c (ED25519)
 SHA256:MTg+iT5vx0JojrBuOTrN4/MdDv0kL390byaC5iPHymE (RSA)
+# you should mention that a possibly already running `sshd` needs to be
+# temporarily disabled to do this
 > sudo ssh-pairing-server
 (no output yet)
 ```
