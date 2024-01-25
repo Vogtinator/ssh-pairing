@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
 
 	ssh_set_auth_methods(session, SSH_AUTH_METHOD_PUBLICKEY | SSH_AUTH_METHOD_INTERACTIVE);
 
-	char *authorized_keys = strdup("");
 	int keycount = 0;
 
 	ssh_message message;
@@ -72,15 +71,11 @@ int main(int argc, char *argv[])
 		if (msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_PUBLICKEY && keycount < MAX_KEY_COUNT) {
 			ssh_key pubkey = ssh_message_auth_pubkey(message);
 			char *key_fp = NULL;
-			if(ssh_pki_export_pubkey_base64(pubkey, &key_fp) == 0) {
+			if (ssh_pki_export_pubkey_base64(pubkey, &key_fp) == 0) {
 				const char *key_type = ssh_key_type_to_char(ssh_key_type(pubkey));
-				char *new_authorized_keys;
-				if (asprintf(&new_authorized_keys, "%s%s %s %s@%s\n",
-				             authorized_keys, key_type, key_fp, ssh_message_auth_user(message), clientname) > 0) {
-					free(authorized_keys);
-					authorized_keys = new_authorized_keys;
-					keycount += 1;
-				}
+				printf("%s %s %s@%s\n",
+				       key_type, key_fp, ssh_message_auth_user(message), clientname);
+				keycount += 1;
 				free(key_fp);
 			}
 		} else if (msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_INTERACTIVE) {
@@ -101,10 +96,6 @@ int main(int argc, char *argv[])
 		ssh_message_reply_default(message);
 		ssh_message_free(message);
 	}
-
-	printf("%s", authorized_keys);
-	free(authorized_keys);
-	authorized_keys = NULL;
 
 	ssh_disconnect(session);
 	ssh_free(session);
