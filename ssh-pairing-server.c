@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Client identifier
-	char clientname[INET6_ADDRSTRLEN];
+	char clientname[NI_MAXHOST];
 	strlcpy(clientname, "ssh-pairing", sizeof(clientname));
 
 	// Get the client IP if possible, avoid a potentially slow reverse lookup.
