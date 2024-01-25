@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		socklen_t sa_len = sizeof(sa);
 		if (getpeername(ssh_get_fd(session), (struct sockaddr*) &sa, &sa_len) == 0)
 			getnameinfo((struct sockaddr*) &sa, sa_len,
-						clientname, sizeof(clientname), NULL, 0, NI_NUMERICHOST);
+			            clientname, sizeof(clientname), NULL, 0, NI_NUMERICHOST);
 	}
 
 	if (ssh_handle_key_exchange(session)) {
@@ -99,8 +99,8 @@ int main(int argc, char *argv[])
 			ssh_message_auth_set_methods(message, SSH_AUTH_METHOD_INTERACTIVE);
 
 		ssh_message_reply_default(message);
-        ssh_message_free(message);
-    }
+		ssh_message_free(message);
+	}
 
 	printf("%s", authorized_keys);
 	free(authorized_keys);
