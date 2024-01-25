@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 			}
 		} else if (msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_INTERACTIVE) {
 			char *msg = NULL;
-			if (asprintf(&msg, "Received %d public keys from %s@%s", keycount, ssh_message_auth_user(message), clientname) > 0) {
+			if (asprintf(&msg, "Received %d public keys", keycount) > 0) {
 				ssh_message_auth_interactive_request(message, msg, "", 0, NULL, 0);
 				free(msg);
 			}
