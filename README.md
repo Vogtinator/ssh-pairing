@@ -6,9 +6,25 @@ With this, setting up SSH authentication is more user friendly, as the user's pu
 
 It is arguably also more secure, as no passwords are involved, not even temporarily just to be able to `ssh-copy-id`.
 
-This tool is design to be used as part of some CLI or TUI, but can also be used manually.
+`ssh-pairing-server` is designed to be used as part of some CLI or TUI like the bundled `ssh-pairing` tool, but can also be used manually.
 
-### Manual Example
+## Build and Install
+
+[meson](https://mesonbuild.com/) and [libssh](https://www.libssh.org/) are needed for building.
+To use the `ssh-pairing` tool, [dialog](https://invisible-mirror.net/dialog/dialog.html) is needed during runtime.
+
+```
+> meson setup build
+> ninja -C build install
+```
+
+## Example using `ssh-pairing`
+
+On the server, run `ssh-pairing` as root. It will pause a possibly running `sshd.service`, show all needed info for establishing a connection from a client and allow selection of keys to import.
+
+![ssh-pairing showing connection info](./screenshots/connection-dialog.png) ![ssh-pairing prompting for keys to import](./screenshots/key-import-dialog.png)
+
+## Manual Example
 
 On the server, display the IP address (or hostname) and the host key fingerprints, stop sshd if necessary, then start ssh-pairing-server:
 
@@ -52,7 +68,7 @@ ssh-rsa AAAAB3NzaC1[...]FTVrVbxNMPsago7 fvogt@10.168.7.84
 
 Note: Do not write the output of ssh-pairing-server into `~/ssh/authorized_keys` directly in case someone else attempts to connect. To protect against this, only a single client can connect and get the success message saying "Received X public keys". A full UI must ask the user for confirmation on the server after connection.
 
-### How it works
+## How it works
 
 When connecting to an SSH server, the SSH client offers all available public keys to the server and asks whether they can be used for authentication. If none of them are accepted, it falls back to other authentication methods like `keyboard-interactive`.
 
