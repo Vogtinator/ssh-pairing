@@ -73,8 +73,9 @@ ssh_enroll_do_config()
 	fi
 
 	# Make sure host keys exist
-	if command -v sshd-gen-keys-start &>/dev/null; then
-		sshd-gen-keys-start # Called by sshd.service on openSUSE
+	if command -v sshd-gen-keys-start >/dev/null; then
+		# Called by sshd.service on openSUSE
+		sshd-gen-keys-start >/dev/null
 	else
 		ssh-keygen -A
 	fi
