@@ -7,3 +7,7 @@ executable('ssh-pairing-server',
            dependencies: dependency('libssh'),
            install: true,
            install_dir: get_option('sbindir'))
+
+install_data('ssh-pairing',
+             install_mode: 'rwxr-xr-x',
+             install_dir: get_option('sbindir'))
