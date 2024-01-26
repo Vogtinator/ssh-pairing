@@ -33,7 +33,7 @@ handle_pubkeys()
 
 	local items=()
 	local lineno=1
-	while read -r type key comment; do
+	while read -r type key _; do
 		items+=("$lineno" "${type} ${key:0:8}...${key: -20:20}" "off")
 		lineno=$((lineno+1))
 	done <"$filename"
@@ -60,7 +60,8 @@ handle_pubkeys()
 }
 
 tmpdir="$(mktemp -d)"
-trap "rm -r ${tmpdir}" EXIT
+# shellcheck disable=SC2064
+trap "rm -r ${tmpdir@Q}" EXIT
 
 ssh_enroll_do_config()
 {
@@ -95,7 +96,7 @@ ssh_enroll_do_config()
 			local artlines=()
 			readarray -t artlines < <(ssh-keygen -l -v -f "$i" | tail -n+2)
 			for (( j=0; j < "${#artlines[@]}"; j++ )); do
-				allartlines[$j]="${allartlines[$j]-}${artlines[$j]} "
+				allartlines[j]="${allartlines[j]-}${artlines[j]} "
 			done
 		done
 		( IFS=$'\n'; echo -n "${allartlines[*]}" )
