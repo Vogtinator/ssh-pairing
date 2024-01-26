@@ -38,8 +38,9 @@ handle_pubkeys()
 		lineno=$((lineno+1))
 	done <"$filename"
 
-	text="$(printf $"Received %d public keys from %s. Select the key(s) to import." "$(wc -l <"$filename")" "$(awk '{print $3; exit}' "$filename")")"
-	if ! dialog_get_result --separate-output --no-tags --checklist "$text" 12 60 10 "${items[@]}"; then
+	text="$(printf $"Verify that the 'Received %d public keys' message appeared on the client (%s) and select the key(s) to import." \
+	               "$(wc -l <"$filename")" "$(awk '{print $3; exit}' "$filename")")"
+	if ! dialog_get_result --separate-output --no-tags --checklist "$text" 0 0 0 "${items[@]}"; then
 		return 0
 	fi
 
