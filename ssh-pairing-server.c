@@ -15,6 +15,13 @@
 
 int main(int argc, char *argv[])
 {
+	if (argc != 1) {
+		fprintf(stderr, "Usage: ssh-pairing-server\n\n"
+		                "SSH server which prints received public keys to stdout.\n"
+				"It uses libssh's default config and accepts only a single connection.\n");
+		exit(1);
+	}
+
 	ssh_bind bind = ssh_bind_new();
 
 	// If a file doesn't exist it's ignored. If no host keys are available,
