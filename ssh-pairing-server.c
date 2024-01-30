@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
 	ssh_set_auth_methods(session, SSH_AUTH_METHOD_PUBLICKEY | SSH_AUTH_METHOD_INTERACTIVE);
 
 	int keycount = 0;
+	bool confirmation_sent = false;
 
 	ssh_message message;
 	while ((message = ssh_message_get(session))) {
@@ -85,13 +86,21 @@ int main(int argc, char *argv[])
 				free(key_fp);
 			}
 		} else if (msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_INTERACTIVE) {
+			// A reply to the confirmation message means the message arrived.
+			if (ssh_message_auth_kbdint_is_response(message)) {
+				confirmation_sent = true;
+				ssh_message_free(message);
+				break;
+			}
+
+			// Send a confirmation message. No prompts means it responds immediately.
 			char *msg = NULL;
 			if (asprintf(&msg, "Received %d public keys", keycount) > 0) {
 				ssh_message_auth_interactive_request(message, msg, "", 0, NULL, 0);
 				free(msg);
 			}
 			ssh_message_free(message);
-			break;
+			continue;
 		}
 
 		if (keycount < MAX_KEY_COUNT)
@@ -107,4 +116,11 @@ int main(int argc, char *argv[])
 	ssh_free(session);
 	ssh_bind_free(bind);
 	ssh_finalize();
+
+	if (!confirmation_sent) {
+		fprintf(stderr, "Session did not complete until keyboard-interactive.\n");
+		return 1;
+	}
+
+	return 0;
 }
