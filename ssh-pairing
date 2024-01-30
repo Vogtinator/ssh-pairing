@@ -104,7 +104,7 @@ ssh_enroll_do_config()
 		( IFS=$'\n'; echo -n "${allartlines[*]}" )
 	} >"${tmpdir}/msg"
 
-	ssh-pairing-server >"${tmpdir}/pubkeys" &
+	ssh-pairing-server >"${tmpdir}/pubkeys" 2>"${tmpdir}/servererr" &
 	local serverpid=$!
 
 	# Have to use dialog directly here, a shell in between would eat signals
@@ -130,7 +130,7 @@ ssh_enroll_do_config()
 	if [ "$who" -eq "$serverpid" ] && [ "$exitcode" -eq 0 ]; then
 		handle_pubkeys "${tmpdir}/pubkeys"
 	elif [ "$who" -eq "$serverpid" ]; then
-		d_styled --msgbox $"ssh-pairing-server exited with ${exitcode}" 0 0
+		d_styled --msgbox $"ssh-pairing-server exited with ${exitcode}:\n""$(cat ${tmpdir}/servererr)" 0 0
 	else
 		d_styled --msgbox $"Key enrollment cancelled by user request" 0 0
 	fi
