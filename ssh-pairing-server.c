@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// Client identifier
+	// Client identifier to be used in the authorized_keys comment section (user@host)
 	char clientname[NI_MAXHOST] = "ssh-pairing";
 
 	// Get the client IP if possible, avoid a potentially slow reverse lookup.
