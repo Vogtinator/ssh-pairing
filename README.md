@@ -75,3 +75,13 @@ When connecting to an SSH server, the SSH client offers all available public key
 This tool uses libssh to implement an SSH server using the real host key of the SSH server and listens on the target port on the server. It records all public keys offered by the client to write them to stdout later, in a format suitable for `authorized_keys`. When the client falls back to `keyboard-interactive`, the server sends a status message to the client and ends the connection.
 
 The "comment" field for each key in the output consists of the requested target user (defaults to the username of the client if not specified) and the IP address of the client.
+
+## Security Considerations
+
+Goal of the tool is secure bidirectional key exchange, i.e. afterwards the client can verify the server based on the server's host keys and the server can allow authentication based on the client user's keys.
+
+As first step, the host keys are displayed (in hash format as well as randomart) alongside the connection instructions. The client needs to verify the server's host key matches one of the displayed ones during the initial connection. After successful verification, this is persisted in the client's known_host config (completing half of the key exchange already) and prevents MITM attacks.
+
+Next step is to verify the client's identity to the server. During pairing, the server waits for a single connection for accepting public keys. This might not be the intended client, but instead any random (even malicious) connection attempt. To be able to detect that, the client which got its public keys read by ssh-pairing-server receives a distinguishable success message from the server (`ssh-pairing: Received X public keys`) before the connection is closed. Receiving this message from the server (whose identity is validated by the host key verification) means that ssh-pairing-server received the keys from this particular client. If this message is not displayed on the client (for whatever reason), the process needs to be started over.
+
+For maximum trust, ideally the fingerprints of the to-be-added public keys on the server side are also interactively compared against the fingerprints on the client system.
