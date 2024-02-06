@@ -38,7 +38,7 @@ handle_pubkeys()
 		lineno=$((lineno+1))
 	done <"$filename"
 
-	text="$(printf $"Verify that the 'Received %d public keys' message appeared on the client (%s) and select the key(s) to import." \
+	text="$(printf $"Verify that the 'ssh-pairing: Received %d public keys' message appeared on the client (%s) and select the key(s) to import." \
 	               "$(wc -l <"$filename")" "$(awk '{print $3; exit}' "$filename")")"
 	if ! dialog_get_result --separate-output --no-tags --checklist "$text" 0 0 0 "${items[@]}"; then
 		return 0

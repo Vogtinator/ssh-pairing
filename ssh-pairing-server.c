@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 
 			// Send a confirmation message. No prompts means it responds immediately.
 			char *msg = NULL;
-			if (asprintf(&msg, "Received %d public keys", keycount) > 0) {
+			if (asprintf(&msg, "ssh-pairing: Received %d public keys", keycount) > 0) {
 				ssh_message_auth_interactive_request(message, msg, "", 0, NULL, 0);
 				free(msg);
 			}
