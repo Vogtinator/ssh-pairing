@@ -50,11 +50,11 @@ ED25519 key fingerprint is SHA256:68fgeoCzfSPPTLbSW272DnLYER2Z9S3w8h2GDEcjg7c.
 This key is not known by any other names.
 Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 Warning: Permanently added '10.168.7.84' (ED25519) to the list of known hosts.
-Received 3 public keys
+ssh-pairing: Received 3 public keys
 Connection reset by 10.168.7.84 port 22
 ```
 
-It's important to look for the "Received X public keys" message, which confirms that this particular connection got accepted by ssh-pairing-server.
+It's important to look for the `ssh-pairing: Received X public keys` message, which confirms that this particular connection got accepted by ssh-pairing-server.
 
 On the server side, the received public keys were printed and the server exited. If sshd was stopped previously, it can be started again. The keys from the ssh-pairing-server output can be appended to `~/.ssh/authorized_keys` for any user.
 
