@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
 				printf("%s %s %s@%s\n",
 				       key_type, key_fp, ssh_message_auth_user(message), clientname);
 				keycount += 1;
-				free(key_fp);
 			}
+			SSH_STRING_FREE_CHAR(key_fp);
 		} else if (msg_type == SSH_REQUEST_AUTH && msg_subtype == SSH_AUTH_METHOD_INTERACTIVE) {
 			// A reply to the confirmation message means the message arrived.
 			if (ssh_message_auth_kbdint_is_response(message)) {
