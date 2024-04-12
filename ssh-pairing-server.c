@@ -18,17 +18,35 @@ int main(int argc, char *argv[])
 	if (argc != 1) {
 		fprintf(stderr, "Usage: ssh-pairing-server\n\n"
 		                "SSH server which prints received public keys to stdout.\n"
-				"It uses libssh's default config and accepts only a single connection.\n");
+		                "It reads sshd_config and accepts only a single connection.\n");
 		exit(1);
 	}
 
 	ssh_bind bind = ssh_bind_new();
 
-	// If a file doesn't exist it's ignored. If no host keys are available,
-	// ssh_bind_listen will fail immediately with a helpful error.
-	ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_ecdsa_key");
-	ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_ed25519_key");
-	ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_rsa_key");
+	// Read OpenSSH's config file.
+	{
+		const char *sshd_config_path = "/usr/etc/ssh/sshd_config";
+		if (access("/etc/ssh/sshd_config", F_OK) == 0)
+			sshd_config_path = "/etc/ssh/sshd_config";
+
+		if (ssh_bind_options_parse_config(bind, sshd_config_path) != SSH_OK) {
+			fprintf(stderr, "Failed to parse config: %s\n", ssh_get_error(bind));
+			return 1;
+		}
+	}
+
+	// Work around https://gitlab.com/libssh/libssh-mirror/-/issues/234,
+	// set the default host key paths explicitly.
+	// TODO: Add a proper version check once the fix is in a released version.
+	//if (ssh_version(SSH_VERSION_INT(0, 10, 90)) == NULL) {
+	if (1) {
+		// If a file doesn't exist it's ignored. If no host keys are available,
+		// ssh_bind_listen will fail immediately with a helpful error.
+		ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_ecdsa_key");
+		ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_ed25519_key");
+		ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_rsa_key");
+	}
 
 	if (ssh_bind_listen(bind) < 0) {
 		fprintf(stderr, "Failed to listen: %s\n", ssh_get_error(bind));
