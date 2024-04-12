@@ -9,55 +9,42 @@ d_styled()
 	dialog --title $"SSH Key Enrollment" "$@"
 }
 
-# Run d_styled and save the output into $result
-dialog_get_result()
-{
-	local retval=0
-	local stdoutfd
-	# Bash makes it a bit annoying to read the output of a different FD into a variable, it
-	# only supports reading stdout by itself. So redirect 3 to stdout and 1 to the real stdout.
-	exec {stdoutfd}>&1
-	result="$(d_styled --output-fd 3 "$@" 3>&1 1>&${stdoutfd})" || retval=$?
-	# Word splitting makes it necessary to use eval here.
-	eval "exec ${stdoutfd}>&-"
-	return "$retval"
-}
-
 handle_pubkeys()
 {
 	local filename="$1"
 	if ! [ -s "$filename" ]; then
 		d_styled --msgbox $"No public keys received!" 0 0
-		return 0
+		return 1
 	fi
 
-	local items=()
-	local lineno=1
-	while read -r type key _; do
-		items+=("$lineno" "${type} ${key:0:8}...${key: -20:20}" "off")
-		lineno=$((lineno+1))
-	done <"$filename"
-
-	text="$(printf $"Verify that the 'ssh-pairing: Received %d public keys' message appeared on the client (%s) and select the key(s) to import." \
-	               "$(wc -l <"$filename")" "$(awk '{print $3; exit}' "$filename")")"
-	if ! dialog_get_result --separate-output --no-tags --checklist "$text" 0 0 0 "${items[@]}"; then
-		return 0
+	local text="$(printf $"Did the\n'ssh-pairing: Received %d public keys'\nmessage appear on the client (%s)?" \
+	              "$(wc -l <"$filename")" "$(awk '{print $3; exit}' "$filename")")"
+	if ! d_styled --defaultno --yesno "$text" 0 0; then
+		d_styled --msgbox $"The message is important to ensure the client identity. Aborting." 0 0
+		return 1
 	fi
 
-	local input=()
-	readarray -t input <<<"$result"
-	# readarray converts an empty string to ("")
-	if [ -z "${input[0]}" ]; then
-		return 0
-	fi
+	local imported=0
 
-	(umask 077; mkdir -p ~/.ssh)
-	for lineno in "${input[@]}"; do
-		awk "NR==${lineno}" <"$filename" >> ~/.ssh/authorized_keys
+	exec {keylistfd}<"$filename"
+	while read -r -u "$keylistfd" keyline; do
+		local text="$(echo -e $"Do you want to import the following key?\n"; echo "$keyline" | ssh-keygen -l -v -f -)"
+		if d_styled --no-nl-expand --no-collapse --defaultno --yesno "$text" 0 0; then
+			(umask 077; mkdir -p ~/.ssh)
+			echo "$keyline" >> ~/.ssh/authorized_keys
+			let imported+=1
+		fi
 	done
+	# Word splitting makes it necessary to use eval here.
+	eval "exec ${keylistfd}>&-"
 
-	text="$(printf $"Imported %d keys" "${#input[@]}")"
-	d_styled --msgbox "$text" 0 0
+	if [ "$imported" -eq 0 ]; then
+		d_styled --msgbox $"No keys imported." 0 0
+		return 2
+	else
+		text="$(printf $"Imported %d keys" "$imported")"
+		d_styled --msgbox "$text" 0 0
+	fi
 }
 
 tmpdir="$(mktemp -d)"
@@ -129,10 +116,13 @@ ssh_enroll_do_config()
 
 	if [ "$who" -eq "$serverpid" ] && [ "$exitcode" -eq 0 ]; then
 		handle_pubkeys "${tmpdir}/pubkeys"
+		return $?
 	elif [ "$who" -eq "$serverpid" ]; then
 		d_styled --msgbox $"ssh-pairing-server exited with ${exitcode}:\n""$(cat ${tmpdir}/servererr)" 0 0
+		return 1
 	else
 		d_styled --msgbox $"Key enrollment cancelled by user request" 0 0
+		return 1
 	fi
 }
 

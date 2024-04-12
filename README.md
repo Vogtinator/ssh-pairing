@@ -20,9 +20,11 @@ To use the `ssh-pairing` tool, [dialog](https://invisible-mirror.net/dialog/dial
 
 ## Example using `ssh-pairing`
 
-On the server, run `ssh-pairing` as root. It will pause a possibly running `sshd.service`, show all needed info for establishing a connection from a client and allow selection of keys to import.
+On the server, run `ssh-pairing` as root. It will pause a possibly running `sshd.service`, show all needed info for establishing a connection from a client and allow importing keys individually.
 
-![ssh-pairing showing connection info](./screenshots/connection-dialog.png) ![ssh-pairing prompting for keys to import](./screenshots/key-import-dialog.png)
+![ssh-pairing showing connection info](./screenshots/connection-dialog.png) ![ssh-pairing asking whether to import a key](./screenshots/key-import-dialog.png)
+
+Exit status: 0 if at least one key was imported. 1 if an error occured. 2 if no keys were selected for import.
 
 ## Manual Example
 
