@@ -35,9 +35,15 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	int session_fd = accept(ssh_bind_get_fd(bind), 0, NULL);
+	if (session_fd < 0) {
+		perror("Failed to accept");
+		return 1;
+	}
+
 	ssh_session session = ssh_new();
 
-	if (ssh_bind_accept(bind, session) != SSH_OK) {
+	if (ssh_bind_accept_fd(bind, session, session_fd) != SSH_OK) {
 		fprintf(stderr, "Failed to accept: %s\n", ssh_get_error(bind));
 		return 1;
 	}
