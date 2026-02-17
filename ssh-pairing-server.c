@@ -30,6 +30,12 @@ int main(int argc, char *argv[])
 	ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_ed25519_key");
 	ssh_bind_options_set(bind, SSH_BIND_OPTIONS_HOSTKEY, "/etc/ssh/ssh_host_rsa_key");
 
+	// The libssh default is "0.0.0.0", which forces IPv4 only.
+	// Using "::" results in an IPv6 socket that also listens for IPv4,
+	// unless the net.ipv6.bindv6only sysctl is set.
+	// Most distros default to 0 there, so let's assume and hope.
+	ssh_bind_options_set(bind, SSH_BIND_OPTIONS_BINDADDR, "::");
+
 	if (ssh_bind_listen(bind) < 0) {
 		fprintf(stderr, "Failed to listen: %s\n", ssh_get_error(bind));
 		return 1;
