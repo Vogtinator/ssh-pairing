@@ -75,13 +75,20 @@ ssh_enroll_do_config()
 		hostname -I
 		echo
 		echo $"Please verify that the host key matches:"
-		for i in /etc/ssh/ssh_host_*key.pub; do ssh-keygen -l -f "$i"; done | awk '{ print $2" "$4 }'
+		for i in /etc/ssh/ssh_host_*key.pub; do
+			# Skip DSA keys, deprecated and no longer supported by ssh-keygen
+			if [ "$i" = "/etc/ssh/ssh_host_dsa_key.pub" ]; then continue; fi
+			ssh-keygen -l -f "$i"
+		done | awk '{ print $2" "$4 }'
 		echo
 
 		echo $"Randomart for ssh -o \"VisualHostKey yes\":"
 		# Display the randomart for all key types next to each other
 		local allartlines=()
 		for i in /etc/ssh/ssh_host_*key.pub; do
+			# Skip DSA keys, deprecated and no longer supported by ssh-keygen
+			if [ "$i" = "/etc/ssh/ssh_host_dsa_key.pub" ]; then continue; fi
+
 			local artlines=()
 			readarray -t artlines < <(ssh-keygen -l -v -f "$i" | tail -n+2)
 			for (( j=0; j < "${#artlines[@]}"; j++ )); do
